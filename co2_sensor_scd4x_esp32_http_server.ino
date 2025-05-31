@@ -33,6 +33,9 @@
 // If on an ESP32-C3 set this
 // int LED_BUILTIN = 13;
 
+// if on an ESP32-S3 Adafruit Qt Py
+#define ESP32S3QTPY
+
 // Task scheduler
 #include <TaskScheduler.h>
 void readSensorCallback();
@@ -69,15 +72,16 @@ NimBLELibraryWrapper lib;
 #include <Wire.h>
 
 uint16_t error;
-char errorMessage[256];
 
 #ifdef USESCD30
   // SCD30
   float co2;
+  char errorMessage[128];
 #endif
 #ifdef USESCD4X
   // SCD4X
   uint16_t co2;
+  char errorMessage[256];
 #endif
 float temperature;
 float humidity;
@@ -180,30 +184,64 @@ void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
 
     // Sensor setup
+#ifdef ESP32S3QTPY
+    #define SDA 41
+    #define SCL 40
+    #define WIRE Wire1
+    Wire1.setPins(SDA, SCL);
+    Wire1.begin(SDA, SCL);
+#else
     Wire.begin();
+#endif
 
     uint16_t error;
-    char errorMessage[256];
 
 #ifdef USESCD30
     // SCD30
+#ifdef ESP32S3QTPY
+    sensor.begin(Wire1, SCD30_I2C_ADDR_61);
+#else
     sensor.begin(Wire, SCD30_I2C_ADDR_61);
+#endif
+    char errorMessage[128];
 #endif
 #ifdef USESCD4X
     // SCD4X
     sensor.begin(Wire);
+    char errorMessage[256];
 #endif
 
     // stop potentially previously started measurement
     error = sensor.stopPeriodicMeasurement();
     if (error) {
       printToSerial("Error trying to execute stopPeriodicMeasurement(): ");
+#ifdef USESCD30
+      errorToString(error, errorMessage, 128);
+#endif
+#ifdef USESCD4X
       errorToString(error, errorMessage, 256);
+#endif
       printToSerial(errorMessage);
     }
 #ifdef USESCD30
     // SCD30
     sensor.softReset();
+    delay(2000);
+    uint8_t major = 0;
+    uint8_t minor = 0;
+    error = sensor.readFirmwareVersion(major, minor);
+    if (error != NO_ERROR) {
+        Serial.print("Error trying to execute readFirmwareVersion(): ");
+        errorToString(error, errorMessage, sizeof errorMessage);
+        Serial.println(errorMessage);
+        //return;
+    }
+    Serial.print("firmware version major: ");
+    Serial.print(major);
+    Serial.print("\t");
+    Serial.print("minor: ");
+    Serial.print(minor);
+    Serial.println();
     sensor.activateAutoCalibration(1);
 #endif
 
@@ -235,7 +273,12 @@ void setup() {
 
     if (error) {
       printToSerial("Error trying to execute startPeriodicMeasurement(): ");
+#ifdef USESCD30
+      errorToString(error, errorMessage, 128);
+#endif
+#ifdef USESCD4X
       errorToString(error, errorMessage, 256);
+#endif
       printToSerial(errorMessage);
     }
 
