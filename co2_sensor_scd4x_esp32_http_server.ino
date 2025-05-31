@@ -2,9 +2,12 @@
  Arduino ESP32 WiFi Web Server for the Adafruit SCD4X and SCD30 CO2 sensors.
  Responds to http requests with prometheus.io syntax responses.
 
- # HELP ambient_temperature Ambient temperature
+ # HELP ambient_temperature Ambient temperature minus compensation
  # TYPE ambient_temperature gauge
- ambient_temperature 31.52
+ ambient_temperature 26.52
+ # HELP temperature Measured temperature
+ # TYPE temperature gauge
+ temperature 31.52
  # HELP ambient_humidity Ambient humidity
  # TYPE ambient_humidity gauge
  ambient_humidity 52.83
@@ -35,6 +38,11 @@
 
 // if on an ESP32-S3 Adafruit Qt Py
 #define ESP32S3QTPY
+
+#ifdef ESP32S3QTPY
+#include <Adafruit_NeoPixel.h>
+Adafruit_NeoPixel pixels(1, PIN_NEOPIXEL);
+#endif
 
 // Task scheduler
 #include <TaskScheduler.h>
@@ -86,6 +94,7 @@ uint16_t error;
 float temperature;
 float humidity;
 float voltage;
+float temperatureCompensation;
 
 // Task callback
 void readSensorCallback() {
@@ -144,8 +153,15 @@ void readSensorCallback() {
     provider.handleDownload();
 
     // Pulse blue LED
+#ifdef ESP32S3QTPY
+    pixels.setPixelColor(0, pixels.Color(0, 0, 10));
+    pixels.show();
+    pixels.clear();
+    pixels.show();
+#else
     digitalWrite(LED_BUILTIN, HIGH);
     digitalWrite(LED_BUILTIN, LOW);
+#endif
 }
 
 void printUint16Hex(uint16_t value) {
@@ -200,6 +216,7 @@ void setup() {
     // SCD30
 #ifdef ESP32S3QTPY
     sensor.begin(Wire1, SCD30_I2C_ADDR_61);
+    temperatureCompensation = 5;
 #else
     sensor.begin(Wire, SCD30_I2C_ADDR_61);
 #endif
@@ -294,9 +311,18 @@ void setup() {
     printToSerial("Sensirion BLE Lib initialized with deviceId: " + provider.getDeviceIdString());
 
     // WiFi setup
+#ifdef ESP32S3QTPY
+    pixels.begin();
+    pixels.setPixelColor(0, pixels.Color(10, 0, 0));
+    pixels.show();
+    delay(500);
+    pixels.clear();
+    pixels.show();
+#else
     digitalWrite(LED_BUILTIN, HIGH);
     delay(500);
     digitalWrite(LED_BUILTIN, LOW);
+#endif
 
     delay(10);
 
@@ -313,9 +339,17 @@ void setup() {
     // Wait for a WiFi connection for up to 10 seconds
     for (int i = 0; i < 10; i++) {
       if (WiFi.status() != WL_CONNECTED) {
+#ifdef ESP32S3QTPY
+        pixels.setPixelColor(0, pixels.Color(0, 0, 10));
+        pixels.show();
+        delay(500);
+        pixels.clear();
+        pixels.show();
+#else
         digitalWrite(LED_BUILTIN, HIGH);
         delay(500);
         digitalWrite(LED_BUILTIN, LOW);
+#endif
         printToSerial(".");
         delay(500);
       } else {
@@ -323,9 +357,17 @@ void setup() {
         printToSerial("IP address: ");
         printToSerial((String)WiFi.localIP());
 
+#ifdef ESP32S3QTPY
+        pixels.setPixelColor(0, pixels.Color(0, 10, 0));
+        pixels.show();
+        delay(500);
+        pixels.clear();
+        pixels.show();
+#else
         digitalWrite(LED_BUILTIN, HIGH);
         delay(1000);
         digitalWrite(LED_BUILTIN, LOW);
+#endif
         break;
       }
     }
@@ -358,12 +400,20 @@ void loop() {
             client.println();
 
             // Pulse the LED to show a connection has been made
+#ifdef ESP32S3QTPY
+            pixels.setPixelColor(0, pixels.Color(0, 10, 0));
+            pixels.show();
+#else
             digitalWrite(LED_BUILTIN, HIGH);
+#endif
 
             // Send Prometheus data
             client.print("# HELP ambient_temperature Ambient temperature\n");
             client.print("# TYPE ambient_temperature gauge\n");
-            client.print((String)"ambient_temperature " + temperature + "\n");
+            client.print((String)"ambient_temperature " + (temperature - temperatureCompensation)  + "\n");
+            client.print("# HELP temperature Measured temperature\n");
+            client.print("# TYPE temperature gauge\n");
+            client.print((String)"temperature " + temperature + "\n");
             client.print("# HELP ambient_humidity Ambient humidity\n");
             client.print("# TYPE ambient_humidity gauge\n");
             client.print((String)"ambient_humidity " + humidity + "\n");
@@ -374,7 +424,12 @@ void loop() {
             client.print("# TYPE battery_voltage gauge\n");
             client.print((String)"battery_voltage " + voltage + "\n");
 
+#ifdef ESP32S3QTPY
+            pixels.clear();
+            pixels.show();
+#else
             digitalWrite(LED_BUILTIN, LOW);
+#endif
 
             // The HTTP response ends with another blank line:
             client.print("\n");
