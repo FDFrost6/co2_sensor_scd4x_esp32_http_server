@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garten-Kontrollzentrum V1.3</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="console-header">
+        <h1>// SYSTEM-ÜBERWACHUNGSEINHEIT [BETA-03]</h1>
+        <p class="status-indicator">STATUS: ONLINE // DATENSTROM: STABIL</p>
+    </header>
+
+    <main class="dashboard-container">
+        <div class="metrics-grid">
+            <div class="monitor-module temperature">
+                <h2 class="module-title">UMGEBUNGSTEMPERATUR (T)</h2>
+                <div class="data-display" id="temp-value">24.5</div>
+                <span class="unit-label">°C</span>
+            </div>
+
+            <div class="monitor-module rlf">
+                <h2 class="module-title">RELATIVE LUFTFEUCHTIGKEIT (RLF)</h2>
+                <div class="data-display" id="rlf-value">62.8</div>
+                <span class="unit-label">%</span>
+            </div>
+
+            <div class="monitor-module vpd">
+                <h2 class="module-title">VAPOR PRESSURE DEFICIT (VPD)</h2>
+                <div class="data-display critical" id="vpd-value">1.15</div>
+                <span class="unit-label">kPa</span>
+            </div>
+
+            <div class="monitor-module co2">
+                <h2 class="module-title">KOHLENDIOXID (CO2)</h2>
+                <div class="data-display" id="co2-value">850</div>
+                <span class="unit-label">PPM</span>
+            </div>
+        </div>
+        
+        <div class="special-modules-grid">
+            <div class="monitor-module plant-status">
+                <h2 class="module-title">PFLANZENSTATUS (CANNA-TRACK)</h2>
+                <div class="status-info">
+                    <p class="status-line">Alter: <span class="status-data">Tag 35</span></p>
+                    <p class="status-line">Phase: <span class="status-data phase-color" data-phase="Veg">VEGETATION</span></p>
+                </div>
+            </div>
+
+            <div class="monitor-module vpd-recommendations">
+                <h2 class="module-title">VPD KONTROLLE & EMPFEHLUNGEN</h2>
+                <div class="recommendation-box" id="vpd-rec-box">
+                    <span class="rec-icon">⚠️</span>
+                    <p class="rec-text">**VPD-ZIEL NICHT ERREICHT**</p>
+                    <p class="rec-action high-priority">Feuchtigkeit um 5% RH erhöhen</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-section">
+            <h2 class="section-title">// HISTORISCHE DATENANALYSE [LETZTE 24H]</h2>
+            
+            <div class="chart-grid">
+                <div class="chart-module">
+                    <h3 class="chart-title">TEMPERATUR-TREND</h3>
+                    <div class="chart-placeholder temp-chart"></div> 
+                </div>
+
+                <div class="chart-module">
+                    <h3 class="chart-title">VPD-ENTWICKLUNG</h3>
+                    <div class="chart-placeholder vpd-chart"></div> 
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="console-footer">
+        <p>TERMINAL &copy; 2049 | SYSTEMPROTOKOLL OK</p>
+    </footer>
+    
+    <script>
+        // Funktion zur dynamischen Aktualisierung der Daten und Empfehlungen
+        function updateDataAndRecs() {
+            // Dies ist ein Beispiel-Skript zur Demonstration. 
+            // Hier würden Sie Ihre echten Daten einfügen!
+            
+            // Zufallsdaten (Simulation)
+            document.getElementById('temp-value').textContent = (20 + Math.random() * 8).toFixed(1);
+            document.getElementById('rlf-value').textContent = (50 + Math.random() * 20).toFixed(1);
+            document.getElementById('vpd-value').textContent = (0.8 + Math.random() * 0.5).toFixed(2);
+            document.getElementById('co2-value').textContent = Math.floor(700 + Math.random() * 400);
+
+            // VPD-Empfehlungslogik
+            const vpdValue = parseFloat(document.getElementById('vpd-value').textContent);
+            const recBox = document.getElementById('vpd-rec-box');
+            let recHTML = '';
+
+            // Angenommene optimale Spanne für Veg (0.8 - 1.2 kPa)
+            if (vpdValue < 0.8) {
+                recHTML = '<span class="rec-icon high-priority">❌</span>' +
+                          '<p class="rec-text">**VPD ZU NIEDRIG**</p>' +
+                          '<p class="rec-action high-priority">TEMPERATUR 🌡️ erhöhen ODER FEUCHTE 💧 senken</p>';
+                recBox.style.borderColor = '#ff004c';
+            } else if (vpdValue > 1.2) {
+                recHTML = '<span class="rec-icon high-priority">❌</span>' +
+                          '<p class="rec-text">**VPD ZU HOCH**</p>' +
+                          '<p class="rec-action high-priority">FEUCHTIGKEIT 💧 erhöhen ODER TEMPERATUR 🌡️ senken</p>';
+                recBox.style.borderColor = '#ff004c';
+            } else {
+                recHTML = '<span class="rec-icon ok-priority">✅</span>' +
+                          '<p class="rec-text">**VPD OPTIMAL**</p>' +
+                          '<p class="rec-action ok-priority">Datenstrom stabil. Überwachung fortsetzen.</p>';
+                recBox.style.borderColor = '#00ff66';
+            }
+            recBox.innerHTML = recHTML;
+
+            // Optional: Visueller kritischer Zustand auf VPD-Feld
+            const vpdElement = document.getElementById('vpd-value');
+            if (vpdValue > 1.3 || vpdValue < 0.7) {
+                 vpdElement.classList.add('critical');
+            } else {
+                 vpdElement.classList.remove('critical');
+            }
+        }
+
+        // updateDataAndRecs(); // Erstes Laden
+        // setInterval(updateDataAndRecs, 5000); // Aktualisierung alle 5 Sekunden
+    </script>
+</body>
+</html>

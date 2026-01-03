@@ -1,0 +1,269 @@
+/* Globale Einstellungen */
+body {
+    font-family: 'Consolas', 'Courier New', monospace; 
+    background-color: #0d1117; 
+    color: #00ff66; 
+    margin: 0;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+/* Header-Stil */
+.console-header {
+    border: 1px solid #00ff66;
+    padding: 15px;
+    margin-bottom: 30px;
+    background-color: #1a1e24; 
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.5); 
+}
+
+.console-header h1 {
+    font-size: 2em;
+    margin: 0 0 5px 0;
+    color: #ffffff; 
+    text-shadow: 0 0 5px #00ff66;
+}
+
+.status-indicator {
+    font-size: 0.9em;
+    color: #ff004c; 
+}
+
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px; 
+}
+
+/* Grids */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    gap: 20px;
+}
+
+.special-modules-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr; 
+    gap: 20px;
+}
+
+/* Modul-Basis-Stil */
+.monitor-module {
+    background-color: #22272e; 
+    border: 2px solid #373e47; 
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+
+.module-title {
+    font-size: 1em;
+    color: #cccccc; 
+    margin-top: 0;
+    text-transform: uppercase;
+    border-bottom: 1px dashed #373e47;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+/* Daten-Anzeige */
+.data-display {
+    font-size: 4em;
+    font-weight: bold;
+    color: #ffffff; 
+    text-shadow: 0 0 10px rgba(0, 255, 102, 0.8); 
+    line-height: 1;
+}
+
+.unit-label {
+    font-size: 1.2em;
+    color: #00ff66;
+    display: block;
+    margin-top: 5px;
+}
+
+/* Kritische/Akzent-Farben */
+.vpd .data-display {
+    color: #ffcc00; 
+}
+.co2 .data-display {
+    color: #00c3ff; 
+}
+.critical {
+    color: #ff004c !important; 
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0% { box-shadow: 0 0 5px #ff004c; }
+    50% { box-shadow: 0 0 20px #ff004c; }
+    100% { box-shadow: 0 0 5px #ff004c; }
+}
+
+/* Pflanzenstatus Modul */
+.plant-status {
+    text-align: left;
+}
+.status-info {
+    margin-top: 15px;
+    font-size: 1.3em;
+    line-height: 2.2;
+}
+.status-line {
+    margin: 0;
+    color: #cccccc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed #373e47;
+    padding-bottom: 5px;
+}
+.status-data {
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+.phase-color[data-phase="Veg"] {
+    color: #00ff66; 
+    text-shadow: 0 0 5px #00ff66;
+}
+.phase-color[data-phase="Flower"] {
+    color: #ff00c3; 
+    text-shadow: 0 0 5px #ff00c3;
+}
+
+/* VPD-Empfehlungsbox */
+.recommendation-box {
+    border: 3px solid #ffcc00; 
+    padding: 15px;
+    margin-top: 15px;
+    text-align: center;
+    background-color: rgba(255, 204, 0, 0.05); 
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+}
+
+.rec-icon {
+    font-size: 2.5em;
+    line-height: 1;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.rec-text {
+    font-size: 1.3em;
+    color: #ffffff;
+    margin: 5px 0 10px 0;
+}
+
+.rec-action {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.high-priority {
+    color: #ff004c;
+    text-shadow: 0 0 5px #ff004c;
+}
+
+.ok-priority {
+    color: #00ff66;
+    text-shadow: 0 0 5px #00ff66;
+}
+
+/* Charts-Sektion */
+.section-title {
+    font-size: 1.5em;
+    color: #00ff66;
+    margin: 0 0 15px 0;
+    border-bottom: 2px solid #00ff66;
+    padding-bottom: 5px;
+}
+
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
+    gap: 20px;
+}
+
+.chart-module {
+    background-color: #1a1e24; 
+    border: 1px dashed #373e47; 
+    padding: 15px;
+}
+
+.chart-title {
+    font-size: 1.1em;
+    color: #ffffff;
+    margin-top: 0;
+    text-transform: uppercase;
+}
+
+/* Platzhalter für die Chart-Visualisierung */
+.chart-placeholder {
+    height: 250px;
+    width: 100%;
+    position: relative;
+    border: 1px solid #00ff66;
+    margin-top: 10px;
+    box-shadow: inset 0 0 5px rgba(0, 255, 102, 0.5); 
+    background: 
+        linear-gradient(to top, #0d1117 50%, transparent 50%),
+        repeating-linear-gradient(0deg, #373e47, #373e47 1px, transparent 1px, transparent 20px); 
+    background-size: 100% 1px, 100% 20px;
+    background-position: 0 0, 0 0;
+}
+.chart-placeholder.temp-chart::after {
+    content: ' ';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 70%;
+    background: linear-gradient(to right, #00ff66 0%, #00ff66 20%, #ffcc00 40%, #ffcc00 60%, #00ff66 80%, #00ff66 100%);
+    mask: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><polyline fill="none" stroke="%23ffffff" stroke-width="2" points="0,90 20,40 40,60 60,30 80,70 100,50"/></svg>');
+    mask-size: 100% 100%;
+    opacity: 0.8;
+}
+.chart-placeholder.vpd-chart::after {
+    content: ' ';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #ffcc00;
+    mask: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><polyline fill="none" stroke="%23ffffff" stroke-width="2" points="0,50 20,70 40,80 60,60 80,40 100,20"/></svg>');
+    mask-size: 100% 100%;
+    opacity: 0.8;
+}
+
+/* Industrieller Hintergrund-Effekt */
+.monitor-module::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        45deg,
+        rgba(0,0,0,.05),
+        rgba(0,0,0,.05) 5px,
+        transparent 5px,
+        transparent 10px
+    ); 
+    pointer-events: none;
+    opacity: 0.1;
+}
+
+/* Footer (Konsole) */
+.console-footer {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 10px;
+    border-top: 1px solid #373e47;
+    font-size: 0.8em;
+    color: #555c65; 
+}
