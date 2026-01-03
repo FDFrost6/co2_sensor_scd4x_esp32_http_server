@@ -2,7 +2,8 @@
 
 An Arduino sketch for the [Adafruit SCD4X CO2 sensor](https://github.com/adafruit/Adafruit_CircuitPython_SCD4X) and [Adafruit SCD-30 CO2 sensor](https://github.com/adafruit/Adafruit_SCD30) running on an ESP32 with an http server returning [Prometheus](https://prometheus.io) compatible responses, and sensor readings sent via Bluetooth BLE.
 
-![The Adafruit SCD-41 CO2 sensor graphed in Grafana](scd-41-co2-temperature-humidity.png)
+<img width="2704" height="2925" alt="image" src="https://github.com/user-attachments/assets/1e0f3350-6d7a-44a5-9c24-1ed7c2557f02" />
+
 
 Related software:
 
