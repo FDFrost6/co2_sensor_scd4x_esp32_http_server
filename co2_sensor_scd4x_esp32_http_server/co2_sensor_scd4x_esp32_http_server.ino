@@ -30,6 +30,16 @@
 #include "secrets.h"
 #include "vpd.h"
 
+// OTA Updates
+#include <ArduinoOTA.h>
+#define OTA_HOSTNAME "growcontroller"
+
+// mDNS for local network discovery
+#include <ESPmDNS.h>
+
+// Firmware version
+#define FIRMWARE_VERSION "2.0.0"
+
 // Uncomment which sensor you're using
 // #define USESCD30
 #define USESCD4X
@@ -408,6 +418,22 @@ void printToSerial(String message) {
   }
 }
 
+// Helper function to send CORS headers for mobile app access
+void sendCorsHeaders(WiFiClient& client) {
+  client.println("Access-Control-Allow-Origin: *");
+  client.println("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+  client.println("Access-Control-Allow-Headers: Content-Type");
+}
+
+// Helper function to send JSON response headers with CORS
+void sendJsonHeaders(WiFiClient& client) {
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-type: application/json; charset=UTF-8");
+  sendCorsHeaders(client);
+  client.println("Connection: close");
+  client.println();
+}
+
 // WiFi init
 #include <WiFi.h>
 char* ssid     = SECRET_SSID;
@@ -594,6 +620,43 @@ void setup() {
         printToSerial("IP address: ");
         printToSerial((String)WiFi.localIP());
 
+        // Setup mDNS responder
+        if (MDNS.begin(OTA_HOSTNAME)) {
+          printToSerial("mDNS responder started: http://growcontroller.local");
+          MDNS.addService("http", "tcp", 80);
+          MDNS.addService("growcontroller", "tcp", 80);  // Custom service for app discovery
+        } else {
+          printToSerial("Error setting up mDNS responder!");
+        }
+
+        // Setup OTA Updates
+        ArduinoOTA.setHostname(OTA_HOSTNAME);
+        ArduinoOTA.onStart([]() {
+          String type;
+          if (ArduinoOTA.getCommand() == U_FLASH) {
+            type = "sketch";
+          } else {
+            type = "filesystem";
+          }
+          printToSerial("OTA Start updating " + type);
+        });
+        ArduinoOTA.onEnd([]() {
+          printToSerial("\nOTA End");
+        });
+        ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+          Serial.printf("OTA Progress: %u%%\r", (progress / (total / 100)));
+        });
+        ArduinoOTA.onError([](ota_error_t error) {
+          Serial.printf("OTA Error[%u]: ", error);
+          if (error == OTA_AUTH_ERROR) printToSerial("Auth Failed");
+          else if (error == OTA_BEGIN_ERROR) printToSerial("Begin Failed");
+          else if (error == OTA_CONNECT_ERROR) printToSerial("Connect Failed");
+          else if (error == OTA_RECEIVE_ERROR) printToSerial("Receive Failed");
+          else if (error == OTA_END_ERROR) printToSerial("End Failed");
+        });
+        ArduinoOTA.begin();
+        printToSerial("OTA ready. Hostname: " + String(OTA_HOSTNAME));
+
         configTime(timeZoneOffsetHours * 3600, daylightOffsetHours * 3600, "pool.ntp.org", "time.nist.gov");
         struct tm timeinfo;
         if (getLocalTime(&timeinfo, 10000)) {
@@ -618,9 +681,14 @@ void setup() {
       }
     }
     server.begin();
+    printToSerial("HTTP server started on port 80");
+    printToSerial("Firmware version: " + String(FIRMWARE_VERSION));
 }
 
 void loop() {
+  // Handle OTA updates
+  ArduinoOTA.handle();
+  
   runner.execute();
 
   // Log first data point immediately after 30 seconds
@@ -771,9 +839,7 @@ void loop() {
               }
             } else if (requestPath.indexOf("/data") >= 0) {
               // === DATA ENDPOINT (CSV historical data) ===
-              client.println("HTTP/1.1 200 OK");
-              client.println("Content-type:application/json; charset=UTF-8");
-              client.println();
+              sendJsonHeaders(client);
               
               client.print("[");
               File file = LittleFS.open("/data.csv", "r");
@@ -807,11 +873,44 @@ void loop() {
                 file.close();
               }
               client.print("]");
+            } else if (requestPath.indexOf("/api/info") >= 0) {
+              // === DEVICE INFO ENDPOINT (for mobile app discovery) ===
+              sendJsonHeaders(client);
+              
+              // Calculate plant age
+              float plantAgeDays = 0.0;
+              if (plantTimerActive && plantStartTime > 0) {
+                plantAgeDays = (millis() - plantStartTime) / 86400000.0;
+              }
+              
+              client.print("{");
+              client.print("\"device_name\":\"GrowController\",");
+              client.print("\"firmware_version\":\"" + String(FIRMWARE_VERSION) + "\",");
+              client.print("\"hostname\":\"" + String(OTA_HOSTNAME) + "\",");
+              client.print((String)"\"ip_address\":\"" + WiFi.localIP().toString() + "\",");
+              client.print((String)"\"mac_address\":\"" + WiFi.macAddress() + "\",");
+              client.print((String)"\"rssi\":" + WiFi.RSSI() + ",");
+              client.print((String)"\"uptime_ms\":" + millis() + ",");
+              client.print((String)"\"free_heap\":" + ESP.getFreeHeap() + ",");
+              client.print("\"sensor_type\":\"SCD4X\",");
+              client.print((String)"\"plant_timer_active\":" + (plantTimerActive ? "true" : "false") + ",");
+              client.print((String)"\"plant_age_days\":" + plantAgeDays + ",");
+              client.print((String)"\"light_on_hour\":" + lightOnHour + ",");
+              client.print((String)"\"light_off_hour\":" + lightOffHour + ",");
+              client.print((String)"\"time_synced\":" + (timeSynced ? "true" : "false"));
+              client.print("}\n");
             } else if (requestPath.indexOf("/status") >= 0) {
               // === JSON STATUS ENDPOINT ===
-              client.println("HTTP/1.1 200 OK");
-              client.println("Content-type:application/json; charset=UTF-8");
-              client.println();
+              sendJsonHeaders(client);
+              
+              // Calculate plant age for status response
+              float plantAgeDays = 0.0;
+              if (plantTimerActive && plantStartTime > 0) {
+                plantAgeDays = (millis() - plantStartTime) / 86400000.0;
+              }
+              
+              // Get optimal VPD range for current stage and age
+              VpdRange optimalRange = getVpdRangeForStage(currentGrowStage, plantAgeDays);
               
               client.print("{");
               client.print((String)"\"temperature_c\":" + temperature + ",");
@@ -820,8 +919,14 @@ void loop() {
               client.print((String)"\"co2_ppm\":" + co2 + ",");
               client.print((String)"\"vpd_kpa\":" + currentVpd + ",");
               client.print((String)"\"vpd_status\":\"" + vpdStatusToString(currentVpdStatus) + "\",");
+              client.print((String)"\"vpd_min\":" + optimalRange.min_kPa + ",");
+              client.print((String)"\"vpd_max\":" + optimalRange.max_kPa + ",");
               client.print((String)"\"grow_stage\":\"" + growStageToString(currentGrowStage) + "\",");
-              client.print((String)"\"battery_voltage\":" + voltage);
+              client.print((String)"\"plant_timer_active\":" + (plantTimerActive ? "true" : "false") + ",");
+              client.print((String)"\"plant_age_days\":" + plantAgeDays + ",");
+              client.print((String)"\"light_on\":" + (isLightOn() ? "true" : "false") + ",");
+              client.print((String)"\"battery_voltage\":" + voltage + ",");
+              client.print("\"firmware_version\":\"" + String(FIRMWARE_VERSION) + "\"");
               client.print("}\n");
             } else if (requestPath == "/" || requestPath.indexOf("/dashboard") >= 0) {
               // === HTML DASHBOARD - TERMINAL STYLE ===

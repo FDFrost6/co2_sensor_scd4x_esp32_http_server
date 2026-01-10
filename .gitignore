@@ -1,2 +1,89 @@
+# Secrets and credentials
 secrets.h
+**/secrets.h
+*.secret
+*.secrets
+.env
+.env.*
+!.env.example
 
+# Arduino build artifacts
+*.elf
+*.bin
+*.hex
+*.map
+*.eep
+build/
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+.clang_complete
+.gcc-flags.json
+
+# Node.js (for mobile app)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+.yarn/
+
+# React Native / Expo
+mobile-app/.expo/
+mobile-app/dist/
+mobile-app/web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+mobile-app/ios/Pods/
+mobile-app/ios/build/
+mobile-app/android/.gradle/
+mobile-app/android/app/build/
+mobile-app/android/build/
+mobile-app/android/local.properties
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Certificate and key files
+*.pem
+*.crt
+*.cer

@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "GrowController",
+    "slug": "growcontroller",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0d1117"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.growcontroller.app",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "GrowController needs local network access to communicate with your ESP32 sensor device"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0d1117"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.growcontroller.app",
+      "permissions": ["android.permission.ACCESS_NETWORK_STATE", "android.permission.INTERNET"]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "growcontroller"
+      }
+    }
+  }
+}
